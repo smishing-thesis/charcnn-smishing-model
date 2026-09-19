@@ -40,7 +40,10 @@ def test_parse_imc25_filters_by_language_and_sets_label():
 def test_parse_imc25_replaces_placeholders():
     raw = pd.DataFrame(
         {
-            "text": ["Hola <NAMED_ENTITY>, visita <URL> o llama a <PHONE>"],
+            "text": [
+                "Hola <NAMED_ENTITY>, visita <URL> o llama a <PHONE_NUMBER>, "
+                "escribe a <EMAIL_ADDRESS>"
+            ],
             "language": ["spanish"],
         }
     )
@@ -49,3 +52,15 @@ def test_parse_imc25_replaces_placeholders():
     assert "<" not in text
     assert "http://url" in text
     assert "000000000" in text
+    assert "mail@mail.com" in text
+
+
+def test_parse_imc25_catch_all_covers_lowercase_and_unknown_tokens():
+    raw = pd.DataFrame(
+        {
+            "text": ["visita <link> para mas info sobre <DATE_TIME>"],
+            "language": ["spanish"],
+        }
+    )
+    df = sources.parse_imc25(raw, language="spanish")
+    assert "<" not in df.iloc[0]["text"]

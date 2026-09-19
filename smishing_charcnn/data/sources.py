@@ -19,9 +19,9 @@ REQUIRED_LOCAL_COLUMNS = {"text", "label"}
 _IMC25_PLACEHOLDER_RULES = [
     (r"<NAMED_ENTITY>", " "),
     (r"<URL>", " http://url "),
-    (r"<PHONE>", " 000000000 "),
-    (r"<EMAIL>", " mail@mail.com "),
-    (r"<[A-Z_]+>", " "),  # any remaining placeholder token
+    (r"<PHONE_NUMBER>", " 000000000 "),
+    (r"<EMAIL_ADDRESS>", " mail@mail.com "),
+    (r"<[A-Za-z_]+>", " "),  # any remaining placeholder token
     (r"\s+", " "),
 ]
 
