@@ -1,0 +1,31 @@
+seed: 42
+
+data:
+  imc25_url: "https://raw.githubusercontent.com/reportsmishing/Smishing-Dataset-IMC25/main/dataset/final_dataset_output.csv"
+  imc25_language: "spanish"
+  legit_corpus_path: "data/raw/legit_es.csv"
+  min_text_length: 15
+  processed_dataset_path: "data/processed/dataset.csv"
+
+preprocessing:
+  maxlen: 160
+
+model:
+  # Hyperparameters from Seo et al. (2024), Table 3. Do not change these.
+  embedding_dim: 48
+  conv_filters: 192
+  kernel_size: 12
+  dense_units: 10
+
+training:
+  epochs: 20
+  batch_size: 64
+  validation_split: 0.1
+  test_size: 0.2
+  early_stopping_patience: 3
+  model_path: "models/model.keras"
+  split_cache_path: "models/test_split.npz"
+
+export:
+  tflite_path: "models/smishing_charcnn.tflite"
+  preprocessing_config_path: "models/preprocessing_config.json"

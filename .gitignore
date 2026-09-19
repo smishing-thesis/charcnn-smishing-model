@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Data and model artifacts: may contain real SMS content or trained weights,
+# never commit these.
+data/raw/*
+!data/raw/.gitkeep
+data/processed/
+models/
+*.tflite
+*.keras
+*.h5
+
+# OS
+.DS_Store
