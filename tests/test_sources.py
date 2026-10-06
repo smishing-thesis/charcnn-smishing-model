@@ -64,3 +64,44 @@ def test_parse_imc25_catch_all_covers_lowercase_and_unknown_tokens():
     )
     df = sources.parse_imc25(raw, language="spanish")
     assert "<" not in df.iloc[0]["text"]
+
+
+def test_parse_local_legit_replaces_placeholders():
+    raw = pd.DataFrame(
+        {
+            "text": [
+                "Hola <NAMED_ENTITY>, visita <URL> o llama a <PHONE_NUMBER>, "
+                "escribe a <EMAIL_ADDRESS>"
+            ],
+            "label": [0],
+        }
+    )
+    df = sources.parse_local_legit(raw)
+    text = df.iloc[0]["text"]
+    assert "<" not in text
+    assert "http://url" in text
+    assert "000000000" in text
+    assert "mail@mail.com" in text
+
+
+def test_parse_local_legit_catch_all_covers_lowercase_and_unknown_tokens():
+    raw = pd.DataFrame(
+        {"text": ["visita <link> para mas info sobre <DATE_TIME>"], "label": [0]}
+    )
+    df = sources.parse_local_legit(raw)
+    assert "<" not in df.iloc[0]["text"]
+
+
+def test_imc25_and_local_legit_apply_identical_placeholder_rules():
+    text = "Hola <NAMED_ENTITY>, tu paquete: <URL> llama <PHONE_NUMBER> <EMAIL_ADDRESS> <OTHER>"
+    imc25 = sources.parse_imc25(
+        pd.DataFrame({"text": [text], "language": ["spanish"]}), language="spanish"
+    )
+    legit = sources.parse_local_legit(pd.DataFrame({"text": [text], "label": [0]}))
+    assert imc25.iloc[0]["text"] == legit.iloc[0]["text"]
+
+
+def test_parse_local_legit_keeps_text_without_placeholders_unchanged():
+    raw = pd.DataFrame({"text": ["  Tu codigo es 123456, no lo compartas  "], "label": [0]})
+    df = sources.parse_local_legit(raw)
+    assert df.iloc[0]["text"] == "Tu codigo es 123456, no lo compartas"

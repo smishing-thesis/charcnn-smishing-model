@@ -14,9 +14,11 @@ import pandas as pd
 
 REQUIRED_LOCAL_COLUMNS = {"text", "label"}
 
-# IMC25 anonymizes entities/links with placeholder tokens; map them to
-# processable text instead of dropping them.
-_IMC25_PLACEHOLDER_RULES = [
+# IMC25 and the local legit corpus (built with sms-anonymizer) both anonymize
+# entities/links with the same placeholder tokens. Both sources must go through
+# these exact rules, otherwise a source-specific token (e.g. a literal "<url>")
+# becomes a shortcut the model can learn instead of the message content.
+_PLACEHOLDER_RULES = [
     (r"<NAMED_ENTITY>", " "),
     (r"<URL>", " http://url "),
     (r"<PHONE_NUMBER>", " 000000000 "),
@@ -24,6 +26,13 @@ _IMC25_PLACEHOLDER_RULES = [
     (r"<[A-Za-z_]+>", " "),  # any remaining placeholder token
     (r"\s+", " "),
 ]
+
+
+def _replace_placeholders(texts: pd.Series) -> pd.Series:
+    """Map placeholder tokens to processable text instead of dropping them."""
+    for pattern, replacement in _PLACEHOLDER_RULES:
+        texts = texts.str.replace(pattern, replacement, regex=True)
+    return texts.str.strip()
 
 
 def fetch_imc25_raw(url: str) -> pd.DataFrame:
@@ -37,10 +46,7 @@ def parse_imc25(raw_df: pd.DataFrame, language: str = "spanish") -> pd.DataFrame
     """
     df = raw_df[raw_df["language"].astype(str).str.lower() == language.lower()]
     df = df[["text"]].copy()
-    df["text"] = df["text"].astype(str)
-    for pattern, replacement in _IMC25_PLACEHOLDER_RULES:
-        df["text"] = df["text"].str.replace(pattern, replacement, regex=True)
-    df["text"] = df["text"].str.strip()
+    df["text"] = _replace_placeholders(df["text"].astype(str))
 
     df["y"] = 1
     df["source"] = "IMC25"
@@ -77,7 +83,7 @@ def parse_local_legit(raw_df: pd.DataFrame) -> pd.DataFrame:
         )
 
     df = raw_df[["text", "label"]].dropna().copy()
-    df["text"] = df["text"].astype(str).str.strip()
+    df["text"] = _replace_placeholders(df["text"].astype(str))
     df["y"] = df["label"].astype(int)
     df = df.drop(columns="label")
     df["source"] = "LocalLegit"
